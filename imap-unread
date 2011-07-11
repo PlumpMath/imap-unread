@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+
+tmpfile = '/tmp/unread'
+
+import os
+import re
+import sys
+import csv
+import email
+import imaplib
+import subprocess
+
+server, userid = sys.argv[1:]
+
+with open(os.path.join(os.environ['HOME'], '.authinfo'), 'r') as fd:
+    for line in fd:
+        match = re.match('machine (.+?) login (.+?) ' +
+                         'password (.+?)( port ([0-9]+))', line)
+        if match:
+            machine, login, password, hasport, port = match.groups()
+            if machine == server and userid == login:
+                break
+
+imap = imaplib.IMAP4_SSL(machine, int(port) if hasport else 993)
+imap.login(login, password)
+
+imap.select()                   # select the INBOX
+typ, data = imap.search(None, 'UnSeen')
+data = data[0].split()
+
+past_data = []
+if os.path.isfile(tmpfile):
+    past_data = map(lambda x: x[:-1],
+                    open(tmpfile, 'r').readlines())
+
+lines = []
+if len(data) < 5:
+    for num in data:
+        query = '(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID FROM SUBJECT)])'
+        typ, data = imap.fetch(num, query)
+        msg = email.message_from_string(data[0][1])
+
+        name, addr = email.Utils.parseaddr(msg['From'])
+
+        ident = msg['Message-Id']
+        lines.append(ident)
+
+        if ident not in past_data:
+            subprocess.call(['growlnotify', '-a', '/Applications/Mail.app',
+                             '-t', name or addr, '-m', msg['Subject']])
+else:
+    count = 0
+    for num in data:
+        query = '(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])'
+        typ, data = imap.fetch(num, query)
+        msg = email.message_from_string(data[0][1])
+
+        ident = msg['Message-Id']
+        lines.append(ident)
+
+        if ident not in past_data:
+            count += 1
+
+    subprocess.call(['growlnotify', '-a', '/Applications/Mail.app',
+                     '-m', 'There are %d new messages' % count])
+
+imap.close()
+imap.logout()
+
+if lines:
+    with open(tmpfile, 'w') as fd:
+        for line in lines:
+            fd.write(line)
+            fd.write('\n')
+
+sys.exit(0)
+
+### imap-unread ends here
