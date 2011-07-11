@@ -47,7 +47,8 @@ if len(data) < 5:
 
         if ident not in past_data:
             subprocess.call(['growlnotify', '-a', '/Applications/Mail.app',
-                             '-t', name or addr, '-m', msg['Subject']])
+                             '-t', name or addr, '-m', msg['Subject'],
+                             '-p', 'Moderate'])
 else:
     count = 0
     for num in data:
@@ -61,8 +62,10 @@ else:
         if ident not in past_data:
             count += 1
 
-    subprocess.call(['growlnotify', '-a', '/Applications/Mail.app',
-                     '-m', 'There are %d new messages' % count])
+    if count > 0:
+        subprocess.call(['growlnotify', '-a', '/Applications/Mail.app',
+                         '-m', 'There are %d new messages' % count,
+                         '-p', 'Moderate'])
 
 imap.close()
 imap.logout()
