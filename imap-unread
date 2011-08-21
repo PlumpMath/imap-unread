@@ -14,8 +14,8 @@ server, userid = sys.argv[1:]
 
 with open(os.path.join(os.environ['HOME'], '.authinfo'), 'r') as fd:
     for line in fd:
-        match = re.match('machine (.+?) login (.+?) ' +
-                         'password (.+?)( port ([0-9]+))', line)
+        match = re.match(r'machine +(\S+) +login +(\S+) +' +
+                         r'password +(\S+)( +port +([0-9]+))?', line)
         if match:
             machine, login, password, hasport, port = match.groups()
             if machine == server and userid == login:
