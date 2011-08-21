@@ -21,7 +21,15 @@ with open(os.path.join(os.environ['HOME'], '.authinfo'), 'r') as fd:
             if machine == server and userid == login:
                 break
 
-imap = imaplib.IMAP4_SSL(machine, int(port) if hasport else 993)
+try:
+    if hasport and int(port) == 993:
+        imap = imaplib.IMAP4_SSL(machine, int(port) if hasport else 993)
+    else:
+        imap = imaplib.IMAP4(machine, int(port) if hasport else 143)
+except:
+    print "IMAP server is not running at this time"
+    sys.exit(0)                         # ignore if we can't connect
+
 imap.login(login, password)
 
 imap.select()                   # select the INBOX
