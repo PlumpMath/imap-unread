@@ -17,6 +17,12 @@ if args[0] == '--no-login':
     args = args[1:]
     nologin = True
 
+mailboxes = []
+while args[0] == '--index':
+    mailboxes.append(args[1])
+    args = args[2:]
+
+print "args =", args
 server, userid = args
 
 with open(os.path.join(os.environ['HOME'], '.authinfo'), 'r') as fd:
@@ -39,6 +45,13 @@ except:
 
 if not nologin:
     imap.login(login, password)
+
+def index_mbox(mbox):
+    imap.select(mbox)
+    imap.search(None, '(TEXT "xylophone")')
+
+# Update search indexes
+map(index_mbox, mailboxes)
 
 imap.select()                   # select the INBOX
 typ, data = imap.search(None, 'UnSeen')
