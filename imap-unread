@@ -10,7 +10,14 @@ import email
 import imaplib
 import subprocess
 
-server, userid = sys.argv[1:]
+args = sys.argv[1:]
+nologin = False
+
+if args[0] == '--no-login':
+    args = args[1:]
+    nologin = True
+
+server, userid = args
 
 with open(os.path.join(os.environ['HOME'], '.authinfo'), 'r') as fd:
     for line in fd:
@@ -30,7 +37,8 @@ except:
     print "IMAP server is not running at this time"
     sys.exit(0)                         # ignore if we can't connect
 
-imap.login(login, password)
+if not nologin:
+    imap.login(login, password)
 
 imap.select()                   # select the INBOX
 typ, data = imap.search(None, 'UnSeen')
