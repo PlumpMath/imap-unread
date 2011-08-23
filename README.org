@@ -1,0 +1,12 @@
+* IMAP unread
+
+This script uses Growl to inform the user about any unread messages in an IMAP
+account's INBOX.  At present it doesn't allow for very much configuration, and
+reads the user/password exclusively from the =~/.authinfo= file.  It can be
+used as follows:
+
+#+begin_src sh
+imap-unread localhost $(whoami)
+#+end_src
+
+I use this script from the =postsynchook= in my =~/.offlineimaprc= file.
