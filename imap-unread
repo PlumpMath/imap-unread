@@ -7,6 +7,7 @@ import re
 import sys
 import csv
 import email
+import email.header
 import imaplib
 import subprocess
 
@@ -47,7 +48,10 @@ if not nologin:
 
 def index_mbox(mbox):
     imap.select(mbox)
-    imap.search(None, '(TEXT "xylophone")')
+    try:
+        imap.search(None, '(TEXT "xylophone")')
+    except:
+        pass
 
 # Update search indexes
 map(index_mbox, mailboxes)
@@ -78,20 +82,23 @@ for num in data:
 imap.close()
 imap.logout()
 
-if count < 5:
-    for msgid in msgs.keys():
-        if msgid not in past_data:
-            info = msgs[msgid]
-            subprocess.call(['growlnotify', '-n', 'imap-unread',
-                             '-a', '/Applications/Mail.app',
-                             '-t', info[1] or info[2],
-                             '-m', info[0]['Subject'],
-                             '-p', 'Moderate'])
-else:
-    subprocess.call(['growlnotify', '-n', 'imap-unread',
-                     '-a', '/Applications/Mail.app',
-                     '-m', 'There are %d new messages' % count,
-                     '-p', 'Moderate'])
+try:
+    if count < 5:
+        for msgid in msgs.keys():
+            if msgid not in past_data:
+                info = msgs[msgid]
+                subprocess.call(['growlnotify', '-n', 'imap-unread',
+                    '-a', '/Applications/Mail.app',
+                    '-t', info[1] or info[2],
+                    '-m', email.header.decode_header(info[0]['Subject'])[0][0],
+                    '-p', 'Moderate'])
+    else:
+        subprocess.call(['growlnotify', '-n', 'imap-unread',
+            '-a', '/Applications/Mail.app',
+            '-m', 'There are %d new messages' % count,
+            '-p', 'Moderate'])
+except:
+    pass
 
 if msgs:
     with open(tmpfile, 'w') as fd:
