@@ -89,7 +89,7 @@ try:
                 info = msgs[msgid]
                 subprocess.call(['growlnotify', '-n', 'imap-unread',
                     '-a', '/Applications/Mail.app',
-                    '-t', info[1] or info[2],
+                    '-t', email.header.decode_header(info[1] or info[2])[0][0],
                     '-m', email.header.decode_header(info[0]['Subject'])[0][0],
                     '-p', 'Moderate'])
     else:
